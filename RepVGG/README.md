@@ -1,4 +1,4 @@
-# SFNet
+# RepVGG
 
 [RepVGG: Making VGG-style ConvNets Great Again](https://arxiv.org/abs/2101.03697)
 
