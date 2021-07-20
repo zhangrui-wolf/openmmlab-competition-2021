@@ -15,3 +15,16 @@ repos:
     rev: v0.30.0
     hooks:
       - id: yapf
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.1.0
+    hooks:
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: requirements-txt-fixer
+      - id: double-quote-string-fixer
+      - id: check-merge-conflict
+      - id: fix-encoding-pragma
+        args: [ "--remove" ]
+      - id: mixed-line-ending
+        args: [ "--fix=lf" ]
