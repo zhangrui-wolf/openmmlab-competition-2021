@@ -200,7 +200,6 @@ class RepVGGBlock(nn.Module):
 
 @BACKBONES.register_module()
 class RepVGG(BaseBackbone):
-
     optional_groupwise_layers = [
         2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26
     ]
@@ -282,6 +281,7 @@ class RepVGG(BaseBackbone):
                  out_indices=(3, ),
                  strides=(2, 2, 2, 2),
                  dilations=(1, 1, 1, 1),
+                 frozen_stages=-1,
                  conv_cfg=None,
                  norm_cfg=dict(type='BN'),
                  act_cfg=dict(type='ReLU'),
@@ -319,6 +319,7 @@ class RepVGG(BaseBackbone):
         self.strides = strides
         self.dilations = dilations
         self.deploy = deploy
+        self.frozen_stages = frozen_stages
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
         self.act_cfg = act_cfg
@@ -343,7 +344,8 @@ class RepVGG(BaseBackbone):
             num_blocks = self.arch['num_blocks'][i]
             stride = self.strides[i]
             dilation = self.dilations[i]
-            out_channels = base_channels * 2 ^ i * self.arch['width_factor'][i]
+            out_channels = int(base_channels * 2**i *
+                               self.arch['width_factor'][i])
 
             stage, next_create_block_idx = self._make_stage(
                 channels, out_channels, num_blocks, stride, dilation,
@@ -361,7 +363,9 @@ class RepVGG(BaseBackbone):
 
         blocks = []
         for i in range(num_blocks):
-            groups = self.arch['group_idx'].get(next_create_block_idx, 1)
+            groups = self.arch['group_idx'].get(
+                next_create_block_idx,
+                1) if self.arch['group_idx'] is not None else 1
             blocks.append(
                 RepVGGBlock(
                     in_channels,
@@ -390,6 +394,13 @@ class RepVGG(BaseBackbone):
                 outs.append(x)
 
         return tuple(outs)
+
+    def _freeze_stages(self):
+        for i in range(self.frozen_stages + 1):
+            stage = getattr(self, f'stage_{i}')
+            stage.eval()
+            for param in stage.parameters():
+                param.requires_grad = False
 
     def train(self, mode=True):
         super(RepVGG, self).train(mode)
