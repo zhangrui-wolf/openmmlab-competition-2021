@@ -15,34 +15,6 @@ except ImportError:
                     'to run this model.')
 
 
-def conv_bn(in_channels,
-            out_channels,
-            kernel_size,
-            stride=1,
-            dilation=1,
-            padding=0,
-            groups=1,
-            conv_cfg=None,
-            norm_cfg=dict(type='BN', requires_grad=True)):
-    result = nn.Sequential()
-    result.add_module(
-        'conv',
-        build_conv_layer(
-            conv_cfg,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            dilation=dilation,
-            padding=padding,
-            groups=groups,
-            bias=False))
-    result.add_module('norm',
-                      build_norm_layer(norm_cfg, num_features=out_channels)[1])
-
-    return result
-
-
 class RepVGGBlock(nn.Module):
 
     def __init__(self,
@@ -87,26 +59,34 @@ class RepVGGBlock(nn.Module):
         else:
             self.branch_identity = build_norm_layer(norm_cfg, in_channels)[1] \
                 if out_channels == in_channels and stride == 1 else None
-            self.branch_3x3 = conv_bn(
-                in_channels,
-                out_channels,
+            self.branch_3x3 = self.create_conv_bn(
                 kernel_size=3,
-                stride=stride,
                 dilation=dilation,
                 padding=padding,
-                groups=groups,
-                conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg)
-            self.branch_1x1 = conv_bn(
-                in_channels,
-                out_channels,
-                kernel_size=1,
-                stride=stride,
-                groups=groups,
-                conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg)
+            )
+            self.branch_1x1 = self.create_conv_bn(kernel_size=1)
 
         self.act = build_activation_layer(act_cfg)
+
+    def create_conv_bn(self, kernel_size, dilation=1, padding=0):
+        result = nn.Sequential()
+        result.add_module(
+            'conv',
+            build_conv_layer(
+                self.conv_cfg,
+                in_channels=self.in_channels,
+                out_channels=self.out_channels,
+                kernel_size=kernel_size,
+                stride=self.stride,
+                dilation=dilation,
+                padding=padding,
+                groups=self.groups,
+                bias=False))
+        result.add_module(
+            'norm',
+            build_norm_layer(self.norm_cfg, num_features=self.out_channels)[1])
+
+        return result
 
     def forward(self, x):
 
