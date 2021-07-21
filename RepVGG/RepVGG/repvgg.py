@@ -379,13 +379,13 @@ class RepVGG(BaseBackbone):
                     norm_cfg=self.norm_cfg,
                     act_cfg=self.act_cfg,
                     deploy=self.deploy))
-            self.in_channels = out_channels
+            in_channels = out_channels
             next_create_block_idx += 1
 
         return nn.Sequential(*blocks), next_create_block_idx
 
     def forward(self, x):
-        x = self.stage_0[x]
+        x = self.stage_0(x)
         outs = []
         for i, stage_name in enumerate(self.stages):
             stage = getattr(self, stage_name)
@@ -393,7 +393,10 @@ class RepVGG(BaseBackbone):
             if i in self.out_indices:
                 outs.append(x)
 
-        return tuple(outs)
+        if len(outs) == 1:
+            return outs[0]
+        else:
+            return tuple(outs)
 
     def _freeze_stages(self):
         for i in range(self.frozen_stages + 1):
