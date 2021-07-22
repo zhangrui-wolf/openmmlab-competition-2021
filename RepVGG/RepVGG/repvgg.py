@@ -15,35 +15,29 @@ except ImportError:
                     'to run this model.')
 
 
-def conv_bn(in_channels,
-            out_channels,
-            kernel_size,
-            stride=1,
-            dilation=1,
-            padding=0,
-            groups=1,
-            conv_cfg=None,
-            norm_cfg=dict(type='BN', requires_grad=True)):
-    result = nn.Sequential()
-    result.add_module(
-        'conv',
-        build_conv_layer(
-            conv_cfg,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            dilation=dilation,
-            padding=padding,
-            groups=groups,
-            bias=False))
-    result.add_module('norm',
-                      build_norm_layer(norm_cfg, num_features=out_channels)[1])
-
-    return result
-
-
 class RepVGGBlock(nn.Module):
+    """RepVGG block for RepVGG backbone.
+
+    Args:
+        in_channels (int): The input channels of the block.
+        out_channels (int): The output channels of the block.
+        stride (int): Stride of the 3x3 and 1x1 convolution layer. Default: 1.
+        padding (int): Padding of the 3x3 convolution layer.
+        dilation (int): Dilation of the 3x3 convolution layer.
+        groups (int): Groups of the 3x3 and 1x1 convolution layer. Default: 1.
+        padding_mode (str): Padding mode of the 3x3 convolution layer.
+            Default: 'zeros'.
+        with_cp (bool): Use checkpoint or not. Using checkpoint will save some
+            memory while slowing down the training speed. Default: False.
+        conv_cfg (dict, optional): Config dict for convolution layer.
+            Default: None, which means using conv2d.
+        norm_cfg (dict): dictionary to construct and config norm layer.
+            Default: dict(type='BN', requires_grad=True).
+        act_cfg (dict): Config dict for activation layer.
+            Default: dict(type='ReLU').
+        deploy (bool): Whether to switch the model structure to
+            deployment mode. Default: False.
+    """
 
     def __init__(self,
                  in_channels,
@@ -87,26 +81,34 @@ class RepVGGBlock(nn.Module):
         else:
             self.branch_identity = build_norm_layer(norm_cfg, in_channels)[1] \
                 if out_channels == in_channels and stride == 1 else None
-            self.branch_3x3 = conv_bn(
-                in_channels,
-                out_channels,
+            self.branch_3x3 = self.create_conv_bn(
                 kernel_size=3,
-                stride=stride,
                 dilation=dilation,
                 padding=padding,
-                groups=groups,
-                conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg)
-            self.branch_1x1 = conv_bn(
-                in_channels,
-                out_channels,
-                kernel_size=1,
-                stride=stride,
-                groups=groups,
-                conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg)
+            )
+            self.branch_1x1 = self.create_conv_bn(kernel_size=1)
 
         self.act = build_activation_layer(act_cfg)
+
+    def create_conv_bn(self, kernel_size, dilation=1, padding=0):
+        result = nn.Sequential()
+        result.add_module(
+            'conv',
+            build_conv_layer(
+                self.conv_cfg,
+                in_channels=self.in_channels,
+                out_channels=self.out_channels,
+                kernel_size=kernel_size,
+                stride=self.stride,
+                dilation=dilation,
+                padding=padding,
+                groups=self.groups,
+                bias=False))
+        result.add_module(
+            'norm',
+            build_norm_layer(self.norm_cfg, num_features=self.out_channels)[1])
+
+        return result
 
     def forward(self, x):
 
@@ -200,6 +202,38 @@ class RepVGGBlock(nn.Module):
 
 @BACKBONES.register_module()
 class RepVGG(BaseBackbone):
+    """RepVGG backbone.
+
+    Args:
+        arch (str | dict): The parameter of RepVGG
+            - num_blocks (Sequence[int]): Number of blocks in each stage.
+            - width_factor (Sequence[float]): Width deflator in each stage.
+            - group_idx (dict | optional): RepVGG Block that declares
+                the need to apply group convolution.
+        in_channels (int): Number of input image channels. Default: 3.
+        base_channels (int): Base channels of RepVGG backbone, work
+            with width_factor together.
+        out_indices (Sequence[int]): Output from which stages.
+        strides (Sequence[int]): Strides of the first block of each stage.
+        dilations (Sequence[int]): Dilation of each stage.
+        frozen_stages (int): Stages to be frozen (all param fixed). -1 means
+            not freezing any parameters. Default: -1.
+        conv_cfg (dict | None): The config dict for conv layers. Default: None.
+        norm_cfg (dict): The config dict for norm layers.
+        act_cfg (dict): Config dict for activation layer.
+        with_cp (bool): Use checkpoint or not. Using checkpoint will save some
+            memory while slowing down the training speed. Default: False.
+        deploy (bool): Whether to switch the model structure to deployment
+            mode. Default: False.
+        norm_eval (bool): Whether to set norm layers to eval mode, namely,
+            freeze running stats (mean and var). Note: Effect on Batch Norm
+            and its variants only. Default: False.
+        zero_init_residual (bool): Whether to use zero init for last norm layer
+            in resblocks to let them behave as identity. Default: True.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Default: None
+    """
+
     optional_groupwise_layers = [
         2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26
     ]
