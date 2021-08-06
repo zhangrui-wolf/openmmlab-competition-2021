@@ -1,18 +1,11 @@
-from mim.utils import exit_with_error
-
-try:
-    import torch
-    from torch import nn
-    import torch.nn.functional as F
-    import torch.utils.checkpoint as cp
-    from mmcv.cnn import (build_conv_layer, build_norm_layer,
-                          build_activation_layer)
-    from mmcv.utils.parrots_wrapper import _BatchNorm
-    from mmcls.models.builder import BACKBONES
-    from mmcls.models.backbones.base_backbone import BaseBackbone
-except ImportError:
-    exit_with_error('Please install NumPy, PyTorch, MMCV, MMClassification '
-                    'to run this model.')
+import torch
+import torch.nn.functional as F
+import torch.utils.checkpoint as cp
+from mmcls.models.backbones.base_backbone import BaseBackbone
+from mmcls.models.builder import BACKBONES
+from mmcv.cnn import build_activation_layer, build_conv_layer, build_norm_layer
+from mmcv.utils.parrots_wrapper import _BatchNorm
+from torch import nn
 
 
 class RepVGGBlock(nn.Module):
