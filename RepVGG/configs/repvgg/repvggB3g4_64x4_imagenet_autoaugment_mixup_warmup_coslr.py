@@ -3,11 +3,14 @@ _base_ = './repvggA0_b64x4_imagenet.py'
 model = dict(
     backbone=dict(arch='B3g4'),
     head=dict(
+        type='LinearClsHead',
+        num_classes=1000,
         in_channels=2560,
         loss=dict(
             type='LabelSmoothLoss',
             loss_weight=1.0,
             label_smooth_val=0.1,
+            mode='classy_vision',
             num_classes=1000)),
     train_cfg=dict(
         augments=dict(type='BatchMixup', alpha=0.2, num_classes=1000,
@@ -133,6 +136,7 @@ train_pipeline = [
 data = dict(train=dict(pipeline=train_pipeline))
 
 lr_config = dict(
+    _delete_=True,
     policy='CosineAnnealing',
     min_lr=0,
     warmup='linear',
