@@ -15,7 +15,7 @@ model = dict(
 
 sub_policy_0 = [
     dict(type='Posterize', bits=8, prob=0.4),
-    dict(type='Rotate', angle=9, prob=0.6)
+    dict(type='Rotate', angle=9., prob=0.6)
 ]
 sub_policy_1 = [
     dict(type='Solarize', thr=5, prob=0.6),
@@ -35,7 +35,7 @@ sub_policy_4 = [
 ]
 sub_policy_5 = [
     dict(type='Equalize', prob=0.4),
-    dict(type='Rotate', angle=8, prob=0.8)
+    dict(type='Rotate', angle=8., prob=0.8)
 ]
 sub_policy_6 = [
     dict(type='Solarize', thr=3, prob=0.6),
@@ -46,7 +46,7 @@ sub_policy_7 = [
     dict(type='Equalize', prob=1.0)
 ]
 sub_policy_8 = [
-    dict(type='Rotate', angle=3, prob=0.2),
+    dict(type='Rotate', angle=3., prob=0.2),
     dict(type='Solarize', thr=8, prob=0.6)
 ]
 sub_policy_9 = [
@@ -54,11 +54,11 @@ sub_policy_9 = [
     dict(type='Posterize', bits=6, prob=0.4)
 ]
 sub_policy_10 = [
-    dict(type='Rotate', angle=8, prob=0.8),
+    dict(type='Rotate', angle=8., prob=0.8),
     dict(type='ColorTransform', magnitude=0, prob=0.4)
 ]
 sub_policy_11 = [
-    dict(type='Rotate', angle=9, prob=0.4),
+    dict(type='Rotate', angle=9., prob=0.4),
     dict(type='Equalize', prob=0.6)
 ]
 sub_policy_12 = [
@@ -74,7 +74,7 @@ sub_policy_14 = [
     dict(type='Contrast', magnitude=8, prob=1.0)
 ]
 sub_policy_15 = [
-    dict(type='Rotate', angle=8, prob=0.8),
+    dict(type='Rotate', angle=8., prob=0.8),
     dict(type='ColorTransform', magnitude=2, prob=1.0)
 ]
 sub_policy_16 = [
