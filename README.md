@@ -66,7 +66,7 @@ mim install mmcls
 
 ## Models & Accuracy
 
-See [README.md](./RepVGG/configs/repvgg/README.md) for information about the model, including the model's parameter sizes, GFLOPs, and accuracy. You can also get the download path of the log file and checkpoint file.
+See [README.md](configs/repvgg/README.md) for information about the model, including the model's parameter sizes, GFLOPs, and accuracy. You can also get the download path of the log file and checkpoint file.
 
 ## Usages
 
