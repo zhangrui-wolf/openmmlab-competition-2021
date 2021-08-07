@@ -1,6 +1,6 @@
 # OpenMMLab Competition 2021
 
-This repository is used to participate in the [OpenMMLab Open Source Eco Challenge](https://openmmlab.com/competitions/algorithm-2021). The open source repository will host unofficial implementations of the [RepVGG](https://arxiv.org/abs/2101.03697) based on the [OpenMMLab](https://openmmlab.com/) open source framework [MMClassification](https://github.com/zhangrui-wolf/mmclassification).
+This repository is used to participate in the [OpenMMLab Open Source Eco Challenge](https://openmmlab.com/competitions/algorithm-2021). The open source repository will host unofficial implementations of the [RepVGG](https://arxiv.org/abs/2101.03697) based on the [OpenMMLab](https://openmmlab.com/) open source framework [MMClassification](https://github.com/open-mmlab/mmclassification).
 
 ## Requirements
 
