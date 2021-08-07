@@ -32,36 +32,34 @@ mim install mmcls
 .
 ├── README.md
 ├── RepVGG
-│   ├── configs
-│   │   ├── _base_
-│   │   │   ├── datasets
-│   │   │   │   └── imagenet_bs64.py
-│   │   │   ├── default_runtime.py
-│   │   │   ├── models
-│   │   │   │   └── repvggA0.py
-│   │   │   └── schedules
-│   │   │       └── imagenet_bs256.py
-│   │   └── repvgg
-│   │       ├── README.md
-│   │       ├── repvggA0_b64x4_imagenet.py
-│   │       ├── repvggA1_64x4_imagenet.py
-│   │       ├── repvggA2_64x4_imagenet.py
-│   │       ├── repvggB0_64x4_imagenet.py
-│   │       ├── repvggB1_64x4_imagenet.py
-│   │       ├── repvggB1g2_64x4_imagenet.py
-│   │       ├── repvggB1g4_64x4_imagenet.py
-│   │       ├── repvggB2_64x4_imagenet.py
-│   │       ├── repvggB2g2_64x4_imagenet.py
-│   │       ├── repvggB2g4_64x4_imagenet.py
-│   │       ├── repvggB3_64x4_imagenet.py
-│   │       ├── repvggB3g2_64x4_imagenet.py
-│   │       ├── repvggB3g4_64x4_imagenet.py
-│   │       └── repvggB3g4_64x4_imagenet_autoaugment_mixup_warmup_coslr.py
-│   └── mmcls
-│       └── models
-│           └── backbones
-│               └── repvgg.py
-└── setup.cfg
+│   └── repvgg.py
+├── configs
+│   ├── _base_
+│   │   ├── datasets
+│   │   │   └── imagenet_bs64.py
+│   │   ├── default_runtime.py
+│   │   ├── models
+│   │   │   └── repvggA0.py
+│   │   └── schedules
+│   │       └── imagenet_bs256.py
+│   └── repvgg
+│       ├── README.md
+│       ├── repvggA0_b64x4_imagenet.py
+│       ├── repvggA1_64x4_imagenet.py
+│       ├── repvggA2_64x4_imagenet.py
+│       ├── repvggB0_64x4_imagenet.py
+│       ├── repvggB1_64x4_imagenet.py
+│       ├── repvggB1g2_64x4_imagenet.py
+│       ├── repvggB1g4_64x4_imagenet.py
+│       ├── repvggB2_64x4_imagenet.py
+│       ├── repvggB2g2_64x4_imagenet.py
+│       ├── repvggB2g4_64x4_imagenet.py
+│       ├── repvggB3_64x4_imagenet.py
+│       ├── repvggB3g2_64x4_imagenet.py
+│       ├── repvggB3g4_64x4_imagenet.py
+│       └── repvggB3g4_64x4_imagenet_autoaugment_mixup_warmup_coslr.py
+├── setup.cfg
+└── tools
 ```
 
 ## Models & Accuracy
@@ -78,9 +76,10 @@ There are two ways to run this project: one is to copy the file to the MMClassif
 
    ```shell
    cd openmmlab-competition-2021/
-   cp RepVGG/mmcls/models/backbones/repvgg.py ${mmcls_workspace}/mmcls/models/backbones/
-   cp RepVGG/configs/_base_/models/repvggA0.py ${mmcls_workspace}/configs/_base_/models/
-   cp -r RepVGG/configs/repvgg/ ${mmcls_workspace}/configs/
+   cp RepVGG/repvgg.py ${mmcls_workspace}/mmcls/models/backbones/
+   cp configs/_base_/models/repvggA0.py ${mmcls_workspace}/configs/_base_/models/
+   cp -r configs/repvgg/ ${mmcls_workspace}/configs/
+   sed -i "1c custom_imports = dict(imports=['mmcls.models.backbones.repvgg'], allow_failed_imports=False)" ${mmcls_workspace}/configs/_base_/models/repvggA0.py
    ```
 
    - **Note:**  ${mmcls_workspace} refers to the root directory of the MMClassification project.
@@ -116,7 +115,7 @@ There are two ways to run this project: one is to copy the file to the MMClassif
 1. Enter the RepVGG folder:
 
    ```shell
-   cd openmmlab-competition-2021/RepVGG/
+   cd openmmlab-competition-2021/
    ```
 
 2. Take RepVGG_B3 as an example:
