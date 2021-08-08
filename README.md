@@ -64,7 +64,7 @@ mim install mmcls
 
 ## Models & Accuracy
 
-See [README.md](configs/repvgg/README.md) for information about the model, including the model's parameter sizes, GFLOPs, and accuracy. You can also get the download path of the log file and checkpoint file.
+See [README.md](https://github.com/zhangrui-wolf/openmmlab-competition-2021/blob/main/configs/repvgg/README.md) for information about the model, including the model's parameter sizes, GFLOPs, and accuracy. You can also get the download path of the log file and checkpoint file.
 
 ## Usages
 
