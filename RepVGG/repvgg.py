@@ -129,7 +129,7 @@ class RepVGGBlock(nn.Module):
     def switch_to_deploy(self):
         if self.deploy:
             return
-        assert self.norm_cfg[type] == 'BN', \
+        assert self.norm_cfg['type'] == 'BN', \
             "Switch is not allowed when norm_cfg['type'] != 'BN'."
 
         reparam_weight, reparam_bias = self.reparameterize()
