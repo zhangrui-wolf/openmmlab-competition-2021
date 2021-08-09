@@ -30,6 +30,9 @@ mim install mmcls
 
 ```shell
 .
+├── .git
+├── .gitignore
+├── .pre-commit-config.yaml
 ├── README.md
 ├── RepVGG
 │   └── repvgg.py
@@ -44,6 +47,9 @@ mim install mmcls
 │   │       └── imagenet_bs256.py
 │   └── repvgg
 │       ├── README.md
+│       ├── deploy
+│       │   ├── repvggB2g4_64x4_imagenet_deploy.py
+│       │   └── repvggB3_64x4_imagenet_deploy.py
 │       ├── repvggA0_b64x4_imagenet.py
 │       ├── repvggA1_64x4_imagenet.py
 │       ├── repvggA2_64x4_imagenet.py
@@ -60,6 +66,7 @@ mim install mmcls
 │       └── repvggB3g4_64x4_imagenet_autoaugment_mixup_warmup_coslr.py
 ├── setup.cfg
 └── tools
+    └── convert_repvggblock_param_to_deploy.py
 ```
 
 ## Models & Accuracy
@@ -68,9 +75,11 @@ See [README.md](https://github.com/zhangrui-wolf/openmmlab-competition-2021/blob
 
 ## Usages
 
+### Train & Test
+
 There are two ways to run this project: one is to copy the file to the MMClassification workspace and run the program directly based on the commands in MMClassification; the other is to run the project directly based on MIM.
 
-### MMClassification
+#### MMClassification
 
 1. Copy files to MMClassification workspace.
 
@@ -110,7 +119,7 @@ There are two ways to run this project: one is to copy the file to the MMClassif
      ./tools/dist_test.sh configs/repvgg/repvggB3_64x4_imagenet.py ${CHECKPOINT_FILE} ${GPU_NUM} [--metrics ${METRICS}] [--out ${RESULT_FILE}]
      ```
 
-### MIM
+#### MIM
 
 1. Enter the RepVGG folder:
 
@@ -143,6 +152,31 @@ There are two ways to run this project: one is to copy the file to the MMClassif
      # Multiple GPUs
      PYTHONPATH=$PWD:$PYTHONPATH mim test mmcls configs/repvgg/repvggB3_64x4_imagenet.py --checkpoint ${CHECKPOINT_FILE} --gpus ${GPU_NUM} --launcher pytorch [--metrics ${METRICS}] [--out ${RESULT_FILE}]
      ```
+
+### Reparameterize
+
+Reparameterization is the most important feature of RepVGG networks. By reparameterization, the branching can be reduced and the speed of the model can be improved while keeping the accuracy of the model unchanged.
+
+```shell
+PYTHONPATH=$PWD:$PYTHONPATH python ./tools/convert_repvggblock_param_to_deploy.py ${config_path} ${checkpoint_path} ${save_path} [--device ${device}]
+```
+
+- `config_path`: The path of a model config file.
+- `checkpoint_path`: The path of a model checkpoint file.
+- `save_path`: Save path of the converted parameters.
+- `device`: Which device the model is loaded to, optional: cpu, cuda.
+
+Take the reparameterization of RepVGG_B3 as an example. Suppose the path to the checkpoints file is `checkpoints/RepVGG/B3/RepVGG_B3.pth`.
+
+```shell
+PYTHONPATH=$PWD:$PYTHONPATH python ./tools/convert_repvggblock_param_to_deploy.py  configs/repvgg/repvggB3_64x4_imagenet.py checkpoints/RepVGG/B3/RepVGG_B3.pth checkpoints/RepVGG/B3/RepVGG_B3_deploy.pth
+```
+
+Inference using the reparameterized parameters:
+
+```shell
+PYTHONPATH=$PWD:$PYTHONPATH mim test mmcls configs/repvgg/deploy/repvggB3_64x4_imagenet_deploy.py --checkpoint checkpoints/RepVGG/B3/RepVGG_B3_deploy.pth --gpus ${GPU_NUM} --launcher pytorch --metrics [--metrics ${METRICS}] [--out ${RESULT_FILE}]
+```
 
 ## Citation
 
