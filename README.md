@@ -66,7 +66,9 @@ mim install mmcls
 │       └── repvggB3g4_64x4_imagenet_autoaugment_mixup_warmup_coslr.py
 ├── setup.cfg
 └── tools
-    └── convert_repvggblock_param_to_deploy.py
+    ├── convert_models
+    └── deployment
+        └── convert_repvggblock_param_to_deploy.py
 ```
 
 ## Models & Accuracy
@@ -158,7 +160,7 @@ There are two ways to run this project: one is to copy the file to the MMClassif
 Reparameterization is the most important feature of RepVGG networks. By reparameterization, the branching can be reduced and the speed of the model can be improved while keeping the accuracy of the model unchanged.
 
 ```shell
-PYTHONPATH=$PWD:$PYTHONPATH python ./tools/convert_repvggblock_param_to_deploy.py ${config_path} ${checkpoint_path} ${save_path} [--device ${device}]
+PYTHONPATH=$PWD:$PYTHONPATH python ./tools/deployment/convert_repvggblock_param_to_deploy.py ${config_path} ${checkpoint_path} ${save_path} [--device ${device}]
 ```
 
 - `config_path`: The path of a model config file.
@@ -169,7 +171,7 @@ PYTHONPATH=$PWD:$PYTHONPATH python ./tools/convert_repvggblock_param_to_deploy.p
 Take the reparameterization of RepVGG_B3 as an example. Suppose the path to the checkpoints file is `checkpoints/RepVGG/B3/RepVGG_B3.pth`.
 
 ```shell
-PYTHONPATH=$PWD:$PYTHONPATH python ./tools/convert_repvggblock_param_to_deploy.py  configs/repvgg/repvggB3_64x4_imagenet.py checkpoints/RepVGG/B3/RepVGG_B3.pth checkpoints/RepVGG/B3/RepVGG_B3_deploy.pth
+PYTHONPATH=$PWD:$PYTHONPATH python ./tools/deployment/convert_repvggblock_param_to_deploy.py  configs/repvgg/repvggB3_64x4_imagenet.py checkpoints/RepVGG/B3/RepVGG_B3.pth checkpoints/RepVGG/B3/RepVGG_B3_deploy.pth
 ```
 
 Inference using the reparameterized parameters:
