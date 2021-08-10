@@ -1,3 +1,3 @@
-_base_ = '../repvggB2g4_64x4_imagenet.py'
+_base_ = '../repvggA0_b64x4_imagenet.py'
 
 model = dict(backbone=dict(deploy=True))

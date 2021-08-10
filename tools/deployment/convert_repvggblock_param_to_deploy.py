@@ -1,5 +1,4 @@
 import argparse
-from collections import OrderedDict
 from pathlib import Path
 
 import torch
@@ -23,16 +22,6 @@ def convert_repvggblock_param(config_path,
             module.switch_to_deploy()
 
     torch.save(model.state_dict(), save_path)
-
-    original_state_dict = torch.load(checkpoint_path)
-    switch_state_dict = torch.load(save_path)
-    new_state_dict = OrderedDict()
-    for key, value in original_state_dict.items():
-        if key == 'state_dict':
-            new_state_dict[key] = switch_state_dict
-        else:
-            new_state_dict[key] = value
-    torch.save(new_state_dict, save_path)
 
     print('Done!')
 
