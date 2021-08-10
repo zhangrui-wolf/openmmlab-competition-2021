@@ -48,27 +48,51 @@ mim install mmcls
 │   └── repvgg
 │       ├── README.md
 │       ├── deploy
-│       │   ├── repvggB2g4_64x4_imagenet_deploy.py
-│       │   └── repvggB3_64x4_imagenet_deploy.py
+│       │   ├── repvggA0_b64x4_imagenet_120e_coslr_deploy.py
+│       │   ├── repvggA0_b64x4_imagenet_deploy.py
+│       │   ├── repvggA1_b64x4_imagenet_120e_coslr_deploy.py
+│       │   ├── repvggA2_b64x4_imagenet_120e_coslr_deploy.py
+│       │   ├── repvggB0_b64x4_imagenet_120e_coslr_deploy.py
+│       │   ├── repvggB1_b64x4_imagenet_120e_coslr_deploy.py
+│       │   ├── repvggB1g2_b64x4_imagenet_120e_coslr_deploy.py
+│       │   ├── repvggB1g4_b64x4_imagenet_120e_coslr_deploy.py
+│       │   ├── repvggB2_b64x4_imagenet_120e_coslr_deploy.py
+│       │   ├── repvggB2g2_b64x4_imagenet_deploy.py
+│       │   ├── repvggB2g4_b64x4_imagenet_120e_coslr_deploy.py
+│       │   ├── repvggB2g4_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment_deploy.py
+│       │   ├── repvggB2g4_b64x4_imagenet_deploy.py
+│       │   ├── repvggB3_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment_deploy.py
+│       │   ├── repvggB3_b64x4_imagenet_deploy.py
+│       │   ├── repvggB3g2_b64x4_imagenet_deploy.py
+│       │   ├── repvggB3g4_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment_deploy.py
+│       │   ├── repvggB3g4_b64x4_imagenet_coslr_warmup_label_smoothing_mixup_autoaugment_deploy.py
+│       │   └── repvggB3g4_b64x4_imagenet_deploy.py
 │       ├── repvggA0_b64x4_imagenet.py
-│       ├── repvggA1_64x4_imagenet.py
-│       ├── repvggA2_64x4_imagenet.py
-│       ├── repvggB0_64x4_imagenet.py
-│       ├── repvggB1_64x4_imagenet.py
-│       ├── repvggB1g2_64x4_imagenet.py
-│       ├── repvggB1g4_64x4_imagenet.py
-│       ├── repvggB2_64x4_imagenet.py
-│       ├── repvggB2g2_64x4_imagenet.py
-│       ├── repvggB2g4_64x4_imagenet.py
-│       ├── repvggB3_64x4_imagenet.py
-│       ├── repvggB3g2_64x4_imagenet.py
-│       ├── repvggB3g4_64x4_imagenet.py
-│       └── repvggB3g4_64x4_imagenet_autoaugment_mixup_warmup_coslr.py
+│       ├── repvggA0_b64x4_imagenet_120e_coslr.py
+│       ├── repvggA1_b64x4_imagenet_120e_coslr.py
+│       ├── repvggA2_b64x4_imagenet_120e_coslr.py
+│       ├── repvggB0_b64x4_imagenet_120e_coslr.py
+│       ├── repvggB1_b64x4_imagenet_120e_coslr.py
+│       ├── repvggB1g2_b64x4_imagenet_120e_coslr.py
+│       ├── repvggB1g4_b64x4_imagenet_120e_coslr.py
+│       ├── repvggB2_b64x4_imagenet_120e_coslr.py
+│       ├── repvggB2g2_b64x4_imagenet.py
+│       ├── repvggB2g4_b64x4_imagenet.py
+│       ├── repvggB2g4_b64x4_imagenet_120e_coslr.py
+│       ├── repvggB2g4_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment.py
+│       ├── repvggB3_b64x4_imagenet.py
+│       ├── repvggB3_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment.py
+│       ├── repvggB3g2_b64x4_imagenet.py
+│       ├── repvggB3g4_b64x4_imagenet.py
+│       ├── repvggB3g4_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment.py
+│       └── repvggB3g4_b64x4_imagenet_coslr_warmup_label_smoothing_mixup_autoaugment.py
 ├── setup.cfg
 └── tools
     ├── convert_models
+    │   └── repvgg_to_mmcls.py
     └── deployment
         └── convert_repvggblock_param_to_deploy.py
+
 ```
 
 ## Models & Accuracy
