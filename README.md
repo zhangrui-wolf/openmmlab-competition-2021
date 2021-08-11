@@ -2,6 +2,14 @@
 
 This repository is used to participate in the [OpenMMLab Open Source Eco Challenge](https://openmmlab.com/competitions/algorithm-2021). The open source repository will host unofficial implementations of the [RepVGG](https://arxiv.org/abs/2101.03697) based on the [OpenMMLab](https://openmmlab.com/) open source framework [MMClassification](https://github.com/open-mmlab/mmclassification).
 
+## Features
+
+- Based on the MMClassification framework.
+- Rich configuration files are provided, including all models from the original author's open source library, as well as additional examples.
+- The original authors' publicly available pre-training parameters have been converted to a form that mmcls can load.
+- The RepVGG model can be loaded with plug-ins, such as the SE module, through mmcls' plug-in mechanism.
+- The parameters and configuration files in deploy mode are provided for your testing convenience.
+
 ## Requirements
 
 - MIM >= 0.1.2
@@ -35,6 +43,8 @@ mim install mmcls
 ├── .pre-commit-config.yaml
 ├── README.md
 ├── RepVGG
+│   ├── plugins
+│   │   └── se_plugin.py
 │   └── repvgg.py
 ├── configs
 │   ├── _base_
@@ -66,7 +76,8 @@ mim install mmcls
 │       │   ├── repvggB3g2_b64x4_imagenet_deploy.py
 │       │   ├── repvggB3g4_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment_deploy.py
 │       │   ├── repvggB3g4_b64x4_imagenet_coslr_warmup_label_smoothing_mixup_autoaugment_deploy.py
-│       │   └── repvggB3g4_b64x4_imagenet_deploy.py
+│       │   ├── repvggB3g4_b64x4_imagenet_deploy.py
+│       │   └── repvggD2se_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment_deploy.py
 │       ├── repvggA0_b64x4_imagenet.py
 │       ├── repvggA0_b64x4_imagenet_120e_coslr.py
 │       ├── repvggA1_b64x4_imagenet_120e_coslr.py
@@ -85,14 +96,14 @@ mim install mmcls
 │       ├── repvggB3g2_b64x4_imagenet.py
 │       ├── repvggB3g4_b64x4_imagenet.py
 │       ├── repvggB3g4_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment.py
-│       └── repvggB3g4_b64x4_imagenet_coslr_warmup_label_smoothing_mixup_autoaugment.py
+│       ├── repvggB3g4_b64x4_imagenet_coslr_warmup_label_smoothing_mixup_autoaugment.py
+│       └── repvggD2se_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment.py
 ├── setup.cfg
 └── tools
     ├── convert_models
     │   └── repvgg_to_mmcls.py
     └── deployment
         └── convert_repvggblock_param_to_deploy.py
-
 ```
 
 ## Models & Accuracy
@@ -112,9 +123,11 @@ There are two ways to run this project: one is to copy the file to the MMClassif
    ```shell
    cd openmmlab-competition-2021/
    cp RepVGG/repvgg.py ${mmcls_workspace}/mmcls/models/backbones/
+   cp -r RepVGG/plugins/ ${mmcls_workspace}/mmcls/
    cp configs/_base_/models/repvggA0.py ${mmcls_workspace}/configs/_base_/models/
    cp -r configs/repvgg/ ${mmcls_workspace}/configs/
    sed -i "1c custom_imports = dict(imports=['mmcls.models.backbones.repvgg'], allow_failed_imports=False)" ${mmcls_workspace}/configs/_base_/models/repvggA0.py
+   sed -i "4c \ \ \ \ imports=['mmcls.models.backbones.repvgg', 'mmcls.plugins.se_plugin']," ${mmcls_workspace}/configs/repvgg/repvggD2se_b64x4_imagenet_200e_coslr_warmup_label_smoothing_mixup_autoaugment.py
    ```
 
    - **Note:**  ${mmcls_workspace} refers to the root directory of the MMClassification project.
