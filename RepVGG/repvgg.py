@@ -368,6 +368,11 @@ class RepVGG(BaseBackbone):
             num_blocks=[4, 6, 16, 1],
             width_factor=[3, 3, 3, 5],
             group_idx=g4_map),
+        'D2se':
+        dict(
+            num_blocks=[8, 14, 24, 1],
+            width_factor=[2.5, 2.5, 2.5, 5],
+            group_idx=None)
     }
 
     def __init__(self,
@@ -426,6 +431,10 @@ class RepVGG(BaseBackbone):
         self.plugins = plugins
 
         channels = min(64, int(base_channels * self.arch['width_factor'][0]))
+        if plugins is not None:
+            stage_plugins = self._make_stage_plugins(plugins, 0)
+        else:
+            stage_plugins = None
         self.stage_0 = RepVGGBlock(
             self.in_channels,
             channels,
@@ -434,7 +443,8 @@ class RepVGG(BaseBackbone):
             conv_cfg=conv_cfg,
             norm_cfg=norm_cfg,
             act_cfg=act_cfg,
-            deploy=deploy)
+            deploy=deploy,
+            plugins=stage_plugins)
 
         next_create_block_idx = 1
         self.stages = []
@@ -446,7 +456,7 @@ class RepVGG(BaseBackbone):
                                self.arch['width_factor'][i])
 
             if plugins is not None:
-                stage_plugins = self._make_stage_plugins(plugins, i)
+                stage_plugins = self._make_stage_plugins(plugins, i + 1)
             else:
                 stage_plugins = None
 
@@ -465,16 +475,16 @@ class RepVGG(BaseBackbone):
         An example of plugins format could be:
         >>> plugins=[
         ...     dict(cfg=dict(type='xxx', arg1='xxx'),
-        ...          stages=(False, True, True, True),
+        ...          stages=(False, True, True, True, True),
         ...          position='before_act'),
         ...     dict(cfg=dict(type='yyy'),
-        ...          stages=(True, True, True, True),
+        ...          stages=(True, True, True, True, True),
         ...          position='after_act'),
         ...     dict(cfg=dict(type='zzz', postfix='1'),
-        ...          stages=(True, True, True, True),
+        ...          stages=(True, True, True, True, True),
         ...          position='after_act'),
         ...     dict(cfg=dict(type='zzz', postfix='2'),
-        ...          stages=(True, True, True, True),
+        ...          stages=(True, True, True, True, True),
         ...          position='after_act')
         ... ]
         >>> self = RepVGG(arch='A0')
@@ -501,7 +511,8 @@ class RepVGG(BaseBackbone):
         for plugin in plugins:
             plugin = plugin.copy()
             stages = plugin.pop('stages', None)
-            assert stages is None or len(stages) == self.num_stages
+            assert stages is None or len(stages) == len(
+                self.arch['num_blocks']) + 1
             # whether to insert plugin into current stage
             if stages is None or stages[stage_idx]:
                 stage_plugins.append(plugin)

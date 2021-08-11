@@ -27,6 +27,9 @@ def convert(src, dst):
             'backbone.stage_' + i[5] if i[:5] == 'stage' else i
             for i in splited_key
         ]
+        splited_key = ['se_plugin' if i == 'se' else i for i in splited_key]
+        splited_key = ['conv1.conv' if i == 'down' else i for i in splited_key]
+        splited_key = ['conv2.conv' if i == 'up' else i for i in splited_key]
         splited_key = ['head.fc' if i == 'linear' else i for i in splited_key]
         new_key = '.'.join(splited_key)
         converted_state_dict[new_key] = blobs[key]
