@@ -3,12 +3,14 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as cp
 from mmcls.models.backbones.base_backbone import BaseBackbone
 from mmcls.models.builder import BACKBONES
-from mmcv.cnn import build_activation_layer, build_conv_layer, build_norm_layer
+from mmcv.cnn import (build_activation_layer, build_conv_layer,
+                      build_norm_layer, build_plugin_layer)
+from mmcv.runner import BaseModule
 from mmcv.utils.parrots_wrapper import _BatchNorm
 from torch import nn
 
 
-class RepVGGBlock(nn.Module):
+class RepVGGBlock(BaseModule):
     """RepVGG block for RepVGG backbone.
 
     Args:
@@ -30,6 +32,14 @@ class RepVGGBlock(nn.Module):
             Default: dict(type='ReLU').
         deploy (bool): Whether to switch the model structure to
             deployment mode. Default: False.
+        plugins (list[dict]): List of plugins for current stages,
+            each dict contains:
+            - cfg (dict, required): Cfg dict to build plugin.
+            - position (str, required): Position inside block to insert plugin,
+                options: 'before_act', 'after_act'.
+            Default: None.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Default: None
     """
 
     def __init__(self,
@@ -44,8 +54,14 @@ class RepVGGBlock(nn.Module):
                  conv_cfg=None,
                  norm_cfg=dict(type='BN'),
                  act_cfg=dict(type='ReLU'),
-                 deploy=False):
-        super(RepVGGBlock, self).__init__()
+                 deploy=False,
+                 plugins=None,
+                 init_cfg=None):
+        super(RepVGGBlock, self).__init__(init_cfg)
+        assert plugins is None or isinstance(plugins, list)
+        if plugins is not None:
+            allowed_position = ['before_act', 'after_act']
+            assert all(p['position'] in allowed_position for p in plugins)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -58,6 +74,18 @@ class RepVGGBlock(nn.Module):
         self.norm_cfg = norm_cfg
         self.act_cfg = act_cfg
         self.deploy = deploy
+        self.plugins = plugins
+        self.with_plugins = plugins is not None
+
+        if self.with_plugins:
+            self.before_act_plugins = [
+                plugin['cfg'] for plugin in plugins
+                if plugin['position'] == 'before_act'
+            ]
+            self.after_act_plugins = [
+                plugin['cfg'] for plugin in plugins
+                if plugin['position'] == 'after_act'
+            ]
 
         if deploy:
             self.branch_reparam = build_conv_layer(
@@ -82,6 +110,41 @@ class RepVGGBlock(nn.Module):
             self.branch_1x1 = self.create_conv_bn(kernel_size=1)
 
         self.act = build_activation_layer(act_cfg)
+
+        if self.with_plugins:
+            self.before_act_plugin_names = self.make_block_plugins(
+                out_channels, self.before_act_plugins)
+            self.after_act_plugin_names = self.make_block_plugins(
+                out_channels, self.after_act_plugins)
+
+    def make_block_plugins(self, in_channels, plugins):
+        """make plugins for block.
+
+        Args:
+            in_channels (int): Input channels of plugin.
+            plugins (list[dict]): List of plugins cfg to build.
+
+        Returns:
+            list[str]: List of the names of plugin.
+        """
+        assert isinstance(plugins, list)
+        plugin_names = []
+        for plugin in plugins:
+            plugin = plugin.copy()
+            name, layer = build_plugin_layer(
+                plugin,
+                in_channels=in_channels,
+                postfix=plugin.pop('postfix', ''))
+            assert not hasattr(self, name), f'duplicate plugin {name}'
+            self.add_module(name, layer)
+            plugin_names.append(name)
+        return plugin_names
+
+    def forward_plugin(self, x, plugin_names):
+        out = x
+        for name in plugin_names:
+            out = getattr(self, name)(x)
+        return out
 
     def create_conv_bn(self, kernel_size, dilation=1, padding=0):
         result = nn.Sequential()
@@ -122,7 +185,13 @@ class RepVGGBlock(nn.Module):
         else:
             out = _inner_forward(x)
 
+        if self.with_plugins:
+            out = self.forward_plugin(out, self.before_act_plugin_names)
+
         out = self.act(out)
+
+        if self.with_plugins:
+            out = self.forward_plugin(out, self.after_act_plugin_names)
 
         return out
 
@@ -316,6 +385,7 @@ class RepVGG(BaseBackbone):
                  deploy=False,
                  norm_eval=False,
                  zero_init_residual=True,
+                 plugins=None,
                  init_cfg=[
                      dict(type='Kaiming', layer=['Conv2d']),
                      dict(
@@ -353,6 +423,7 @@ class RepVGG(BaseBackbone):
         self.with_cp = with_cp
         self.norm_eval = norm_eval
         self.zero_init_residual = zero_init_residual
+        self.plugins = plugins
 
         channels = min(64, int(base_channels * self.arch['width_factor'][0]))
         self.stage_0 = RepVGGBlock(
@@ -374,17 +445,71 @@ class RepVGG(BaseBackbone):
             out_channels = int(base_channels * 2**i *
                                self.arch['width_factor'][i])
 
+            if plugins is not None:
+                stage_plugins = self._make_stage_plugins(plugins, i)
+            else:
+                stage_plugins = None
+
             stage, next_create_block_idx = self._make_stage(
                 channels, out_channels, num_blocks, stride, dilation,
-                next_create_block_idx)
+                next_create_block_idx, stage_plugins, init_cfg)
             stage_name = f'stage_{i + 1}'
             self.add_module(stage_name, stage)
             self.stages.append(stage_name)
 
             channels = out_channels
 
+    def _make_stage_plugins(self, plugins, stage_idx):
+        """make plugins for RepVGG 'stage_idx'th stage.
+
+        An example of plugins format could be:
+        >>> plugins=[
+        ...     dict(cfg=dict(type='xxx', arg1='xxx'),
+        ...          stages=(False, True, True, True),
+        ...          position='before_act'),
+        ...     dict(cfg=dict(type='yyy'),
+        ...          stages=(True, True, True, True),
+        ...          position='after_act'),
+        ...     dict(cfg=dict(type='zzz', postfix='1'),
+        ...          stages=(True, True, True, True),
+        ...          position='after_act'),
+        ...     dict(cfg=dict(type='zzz', postfix='2'),
+        ...          stages=(True, True, True, True),
+        ...          position='after_act')
+        ... ]
+        >>> self = RepVGG(arch='A0')
+        >>> stage_plugins = self.make_stage_plugins(plugins, 0)
+        >>> assert len(stage_plugins) == 3
+
+        Suppose 'stage_idx=0', the structure of blocks in the stage would be:
+            RepVGG branch -> act -> yyy -> zzz1 -> zzz2
+        Suppose 'stage_idx=1', the structure of blocks in the stage would be:
+            RepVGG branch -> xxx -> act -> yyy -> zzz1 -> zzz2
+
+        If stages is missing, the plugin would be applied to all stages
+
+        Args:
+            plugins (list[dict]): List of plugins cfg to build. The postfix is
+                required if multiple same type plugins are inserted.
+            stage_idx: Index of stage to build
+
+        Returns:
+            list[dict]: Plugins for current stage
+        """
+
+        stage_plugins = []
+        for plugin in plugins:
+            plugin = plugin.copy()
+            stages = plugin.pop('stages', None)
+            assert stages is None or len(stages) == self.num_stages
+            # whether to insert plugin into current stage
+            if stages is None or stages[stage_idx]:
+                stage_plugins.append(plugin)
+
+        return stage_plugins
+
     def _make_stage(self, in_channels, out_channels, num_blocks, stride,
-                    dilation, next_create_block_idx):
+                    dilation, next_create_block_idx, plugins, init_cfg):
         strides = [stride] + [1] * (num_blocks - 1)
         dilations = [dilation] * num_blocks
 
@@ -405,7 +530,9 @@ class RepVGG(BaseBackbone):
                     conv_cfg=self.conv_cfg,
                     norm_cfg=self.norm_cfg,
                     act_cfg=self.act_cfg,
-                    deploy=self.deploy))
+                    deploy=self.deploy,
+                    plugins=plugins,
+                    init_cfg=init_cfg))
             in_channels = out_channels
             next_create_block_idx += 1
 
